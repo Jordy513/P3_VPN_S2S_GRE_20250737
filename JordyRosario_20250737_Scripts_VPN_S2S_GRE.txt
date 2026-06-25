@@ -1,0 +1,79 @@
+! ══════════════════════════════════════════════════════
+! R1 — Site A | VPN Túnel GRE Point-to-Point
+! Jordy Rosario — 20250737 | Seguridad de Redes 2026-C-2
+! ══════════════════════════════════════════════════════
+
+hostname R1
+
+! ─── Interfaces físicas ────────────────────────────────
+interface Ethernet0/0
+ description WAN-hacia-ISP
+ ip address 192.168.1.10 255.255.255.0
+ no shutdown
+
+interface Ethernet0/1
+ description LAN-SiteA
+ ip address 20.25.37.129 255.255.255.128
+ no shutdown
+
+! ─── Ruta por defecto hacia Internet (ISP) ─────────────
+ip route 0.0.0.0 0.0.0.0 192.168.1.2
+
+! ─── Interfaz de Túnel GRE ─────────────────────────────
+! tunnel mode gre ip es el modo por defecto en Cisco IOS.
+! No requiere ninguna configuración de crypto.
+interface Tunnel0
+ description GRE-P2P-hacia-R2
+ ip address 10.25.37.1 255.255.255.252
+ ip mtu 1476
+ ip tcp adjust-mss 1436
+ tunnel source Ethernet0/0
+ tunnel destination 192.168.1.20
+ tunnel mode gre ip
+ no shutdown
+
+! ─── OSPF — Enrutamiento dinámico sobre el túnel GRE ───
+! GRE soporta multicast nativo, por lo que OSPF funciona
+! directamente sobre Tunnel0 sin configuración adicional.
+router ospf 1
+ network 20.25.37.128 0.0.0.127 area 0    ! LAN local Site A
+ network 10.25.37.0 0.0.0.3 area 0        ! Subred del túnel GRE
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+! ══════════════════════════════════════════════════════
+! R2 — Site B | VPN Túnel GRE Point-to-Point
+! Jordy Rosario — 20250737 | Seguridad de Redes 2026-C-2
+! ══════════════════════════════════════════════════════
+
+hostname R2
+
+! ─── Interfaces físicas ────────────────────────────────
+interface Ethernet0/0
+ description WAN-hacia-ISP
+ ip address 192.168.1.20 255.255.255.0
+ no shutdown
+
+interface Ethernet0/1
+ description LAN-SiteB
+ ip address 20.25.37.1 255.255.255.128
+ no shutdown
+
+! ─── Ruta por defecto hacia Internet (ISP) ─────────────
+ip route 0.0.0.0 0.0.0.0 192.168.1.2
+
+! ─── Interfaz de Túnel GRE ─────────────────────────────
+interface Tunnel0
+ description GRE-P2P-hacia-R1
+ ip address 10.25.37.2 255.255.255.252
+ ip mtu 1476
+ ip tcp adjust-mss 1436
+ tunnel source Ethernet0/0
+ tunnel destination 192.168.1.10
+ tunnel mode gre ip
+ no shutdown
+
+! ─── OSPF — Enrutamiento dinámico sobre el túnel GRE ───
+router ospf 1
+ network 20.25.37.0 0.0.0.127 area 0      ! LAN local Site B
+ network 10.25.37.0 0.0.0.3 area 0        ! Subred del túnel GRE
