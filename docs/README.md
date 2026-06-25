@@ -1,4 +1,4 @@
-# Documentación técnica — IPSec VPN Basado en Enrutamiento (IKEv1)
+# Documentación técnica — IPSec VPN Túnel GRE (Generic Routing Encapsulation) (IKEv1)
 
 Este directorio contiene la documentación formal del laboratorio.
 
